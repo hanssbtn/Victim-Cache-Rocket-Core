@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <riscv-pk/encoding.h>
+#include <stdlib.h>
 #include "marchid.h"
 
 #define read_csr(reg) ({ unsigned long __tmp; \
@@ -21,6 +21,26 @@ static void print_u64_hex(uint64_t v)
         printf("0x%08x%08x", hi, lo);
     else
         printf("0x%x", lo);
+}
+
+// Rocket Chip Default L1 Config is usually 16KB. 
+// Reduce it to 4KB in the config to ensure the Victim Cache is used.
+#define CACHE_SIZE (4 * 1024) 
+#define BLOCK_SIZE 64
+#define NUM_WAYS 4
+#define SET_SIZE (CACHE_SIZE / NUM_WAYS) // 1KB per way
+
+#define ARRAY_SIZE (CACHE_SIZE * 8) // Increase array size to ensure it overflows 4KB easily
+volatile uint64_t buffer[ARRAY_SIZE / 8]; // uint64_t is 8 bytes
+
+// 1. Linear Scan: Should allow prefetchers to work, fills cache cleanly.
+// Baseline measurement.
+void test_linear_scan() {
+    printf("Starting Test 1: Linear Scan\n");
+    for (int i = 0; i < ARRAY_SIZE / 8; i++) {
+        buffer[i] = i;
+    }
+    printf("Ending Test 1: Linear Scan\n");
 }
 
 static void setup_l1d_counters(void)
@@ -53,9 +73,8 @@ int main(void)
     asm volatile("csrr %0, mcycle" : "=r"(start_c));
     asm volatile("csrr %0, minstret" : "=r"(start_i));
     
-    for (volatile int i = 0; i < 10; i++){
-        // Your workload goes in here
-        printf("From C: %d\n", i);
+    for (volatile int i = 0; i < 3; i++){
+        test_linear_scan();
     }
     
     asm volatile("csrr %0, mcycle" : "=r"(end_c));

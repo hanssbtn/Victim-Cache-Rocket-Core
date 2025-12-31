@@ -1,0 +1,35 @@
+vlsi.inputs.clocks: [
+  {name: "clock_uncore", period: "50ns", uncertainty: "2ns"}
+]
+
+# Flow parameters that yield a routable design with reasonable timing
+par.openroad:
+  timing_driven: true  # set to false to drastically speed up runs
+  create_archive_mode: none
+
+  write_reports: true  # set to false to slightly speed up runs
+
+  floorplan_mode: generate
+
+  macro_placement.halo: [50, 50]
+
+  global_placement.timing_driven: true
+  global_placement.routability_driven: true
+
+  global_placement.placement_padding: 6
+  detailed_placement.placement_padding: 4
+  clock_tree.placement_padding: 2
+  clock_tree_resize.placement_padding: 0
+
+  clock_tree_resize.setup_margin: 0.0
+  clock_tree_resize.hold_margin: 0.20
+  global_route_resize.hold_margin: 0.60
+  clock_tree_resize.hold_max_buffer_percent: 80
+
+  global_placement.routing_adjustment: 0.5
+  global_route.routing_adjustment: 0.3
+  global_route_resize.routing_adjustment: 0.2
+
+# DRC/LVS configuration
+drc.magic.generate_only: true
+lvs.netgen.generate_only: true

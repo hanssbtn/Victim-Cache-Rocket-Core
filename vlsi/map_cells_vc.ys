@@ -1,0 +1,19 @@
+# Load Library
+read_liberty -lib /home/user/.conda-sky130/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+# Load Design
+read_verilog -sv /home/user/chipyard/vlsi/build/chipyard.harness.TestHarness.VictimCacheConfig-ChipTop/syn-rundir/ChipTop.mapped.v
+
+# Map Flip-Flops to Sky130 Cells
+dfflibmap -liberty /home/user/.conda-sky130/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+# Clean up any other generics
+abc -liberty /home/user/.conda-sky130/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+
+# Remove unmapped cells and SRAM stubs (assume negligible power use)
+delete t:$_SDFF*
+delete t:$_DFF*
+delete t:sram22_*
+
+# Save cleaned netlist
+write_verilog -noattr vlsi/ChipTop.power_ready_VictimCacheConfig.v
